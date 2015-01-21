@@ -1,17 +1,11 @@
 import jwt
-
 from django.utils.encoding import smart_text
+from django.utils.translation import ugettext as _
 from rest_framework import exceptions
-from rest_framework_jwt.settings import api_settings
 from rest_framework.authentication import (BaseAuthentication,
                                            get_authorization_header)
 
-try:
-    from django.contrib.auth import get_user_model
-except ImportError:  # Django < 1.5
-    from django.contrib.auth.models import User
-else:
-    User = get_user_model()
+from rest_framework_jwt.settings import api_settings
 
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
@@ -42,20 +36,20 @@ class JSONWebTokenAuthentication(BaseAuthentication):
             return None
 
         if len(auth) == 1:
-            msg = 'Invalid Authorization header. No credentials provided.'
+            msg = _('Invalid Authorization header. No credentials provided.')
             raise exceptions.AuthenticationFailed(msg)
         elif len(auth) > 2:
-            msg = ('Invalid Authorization header. Credentials string '
-                   'should not contain spaces.')
+            msg = _('Invalid Authorization header. Credentials string '
+                    'should not contain spaces.')
             raise exceptions.AuthenticationFailed(msg)
 
         try:
             payload = jwt_decode_handler(auth[1])
         except jwt.ExpiredSignature:
-            msg = 'Signature has expired.'
+            msg = _('Signature has expired.')
             raise exceptions.AuthenticationFailed(msg)
         except jwt.DecodeError:
-            msg = 'Error decoding signature.'
+            msg = _('Error decoding signature.')
             raise exceptions.AuthenticationFailed(msg)
 
         user = self.authenticate_credentials(payload)
@@ -67,15 +61,21 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         Returns an active user that matches the payload's user id and email.
         """
         try:
+            from django.contrib.auth import get_user_model
+        except ImportError:  # Django < 1.5
+            from django.contrib.auth.models import User
+        else:
+            User = get_user_model()
+        try:
             user_id = jwt_get_user_id_from_payload(payload)
 
             if user_id is not None:
                 user = User.objects.get(pk=user_id, is_active=True)
             else:
-                msg = 'Invalid payload'
+                msg = _('Invalid payload.')
                 raise exceptions.AuthenticationFailed(msg)
         except User.DoesNotExist:
-            msg = 'Invalid signature'
+            msg = _('Invalid signature.')
             raise exceptions.AuthenticationFailed(msg)
 
         return user
