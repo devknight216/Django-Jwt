@@ -1,6 +1,7 @@
+import jwt
+
 from calendar import timegm
 from datetime import datetime, timedelta
-import jwt
 
 from django.contrib.auth import authenticate
 from django.utils.translation import ugettext as _
@@ -29,7 +30,9 @@ class JSONWebTokenSerializer(Serializer):
     password = serializers.CharField(write_only=True)
 
     def __init__(self, *args, **kwargs):
-        """Dynamically add the USERNAME_FIELD to self.fields."""
+        """
+        Dynamically add the USERNAME_FIELD to self.fields.
+        """
         super(JSONWebTokenSerializer, self).__init__(*args, **kwargs)
         self.fields[self.username_field] = serializers.CharField()
 
@@ -43,8 +46,11 @@ class JSONWebTokenSerializer(Serializer):
             return 'username'
 
     def validate(self, attrs):
-        credentials = {self.username_field: attrs.get(self.username_field),
-                       'password': attrs.get('password')}
+        credentials = {
+            self.username_field: attrs.get(self.username_field),
+            'password': attrs.get('password')
+        }
+
         if all(credentials.values()):
             user = authenticate(**credentials)
 
@@ -63,7 +69,8 @@ class JSONWebTokenSerializer(Serializer):
                     )
 
                 return {
-                    'token': jwt_encode_handler(payload)
+                    'token': jwt_encode_handler(payload),
+                    'user': user
                 }
             else:
                 msg = _('Unable to login with provided credentials.')
@@ -133,5 +140,6 @@ class RefreshJSONWebTokenSerializer(Serializer):
         new_payload['orig_iat'] = orig_iat
 
         return {
-            'token': jwt_encode_handler(new_payload)
+            'token': jwt_encode_handler(new_payload),
+            'user': user
         }
