@@ -101,6 +101,21 @@ Refresh with tokens can be repeated (token1 -> token2 -> token3), but this chain
 
 A typical use case might be a web app where you'd like to keep the user "logged in" the site without having to re-enter their password, or get kicked out by surprise before their token expired. Imagine they had a 1-hour token and are just at the last minute while they're still doing something. With mobile you could perhaps store the username/password to get a new token, but this is not a great idea in a browser. Each time the user loads the page, you can check if there is an existing non-expired token and if it's close to being expired, refresh it to extend their session. In other words, if a user is actively using your site, they can keep their "session" alive.
 
+## Verify Token
+
+In some microservice architectures, authentication is handled by a single service. Other services delegate the responsibility of confirming that a user is logged in to this authentication service. This usually means that a service will pass a JWT received from the user to the authentication service, and wait for a confirmation that the JWT is valid before returning protected resources to the user.
+
+This setup is supported in this package using a verification endpoint. Add the following URL pattern:
+```python
+    url(r'^api-token-verify/', 'rest_framework_jwt.views.verify_jwt_token'),
+```
+
+Passing a token to the verification endpoint will return a 200 response and the token if it is valid. Otherwise, it will return a 400 Bad Request as well as an error identifying why the token was invalid.
+
+```bash
+$ curl -X POST -H "Content-Type: application/json" -d '{"token":"<EXISTING_TOKEN>"}' http://localhost:8000/api-token-verify/
+```
+
 ## Additional Settings
 There are some additional settings that you can override similar to how you'd do it with Django REST framework itself. Here are all the available defaults.
 
@@ -127,6 +142,8 @@ JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_LEEWAY': 0,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=300),
+    'JWT_AUDIENCE': None,
+    'JWT_ISSUER': None,
 
     'JWT_ALLOW_REFRESH': False,
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
@@ -134,7 +151,7 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
 ```
-This packages uses the JSON Web Token Python implementation, [PyJWT](https://github.com/progrium/pyjwt) and allows to modify some of it's available options.
+This packages uses the JSON Web Token Python implementation, [PyJWT](https://github.com/jpadilla/pyjwt) and allows to modify some of it's available options.
 
 ### JWT_SECRET_KEY
 This is the secret key used to sign the JWT. Make sure this is safe and not shared or public.
@@ -143,19 +160,7 @@ Default is your project's `settings.SECRET_KEY`.
 
 ### JWT_ALGORITHM
 
-Possible values:
-
-> * HS256 - HMAC using SHA-256 hash algorithm (default)
-> * HS384 - HMAC using SHA-384 hash algorithm
-> * HS512 - HMAC using SHA-512 hash algorithm
-> * RS256 - RSASSA-PKCS1-v1_5 signature algorithm using SHA-256 hash algorithm
-> * RS384 - RSASSA-PKCS1-v1_5 signature algorithm using SHA-384 hash algorithm
-> * RS512 - RSASSA-PKCS1-v1_5 signature algorithm using SHA-512 hash algorithm
-
-Note:
-> For the RSASSA-PKCS1-v1_5 algorithms, the "secret" argument in jwt.encode is supposed to be a private RSA key as
-> imported with Crypto.PublicKey.RSA.importKey. Likewise, the "secret" argument in jwt.decode is supposed to be the
-> public RSA key imported with the same method.
+Possible values are any of the [supported algorithms](https://github.com/jpadilla/pyjwt#algorithms) for cryptographic signing in PyJWT.
 
 Default is `"HS256"`.
 
@@ -181,6 +186,16 @@ Default is `0` seconds.
 This is an instance of Python's `datetime.timedelta`. This will be added to `datetime.utcnow()` to set the expiration time.
 
 Default is `datetime.timedelta(seconds=300)`(5 minutes).
+
+### JWT_AUDIENCE
+This is a string that will be checked against the `aud` field of the token, if present.
+
+Default is `None`(fail if `aud` present on JWT).
+
+### JWT_ISSUER
+This is a string that will be checked against the `iss` field of the token.
+
+Default is `None`(do not check `iss` on JWT).
 
 ### JWT_ALLOW_REFRESH
 Enable token refresh functionality. Token issued from `rest_framework_jwt.views.obtain_jwt_token` will have an `orig_iat` field. Default is `False`
@@ -219,17 +234,6 @@ Another common value used for tokens and Authorization headers is `Bearer`.
 
 Default is `JWT`.
 
-## Extending `JSONWebTokenAuthentication`
-
-Right now `JSONWebTokenAuthentication` assumes that the JWT will come in the header. The JWT spec does not require this (see: [Making a service Call](https://developer.atlassian.com/static/connect/docs/concepts/authentication.html)). For example, the JWT may come in the querystring. The ability to send the JWT in the querystring is needed in cases where the user cannot set the header (for example the src element in HTML).
-
-To achieve this functionality, the user might write a custom `Authentication`:
-```python
-class JSONWebTokenAuthenticationQS(BaseJSONWebTokenAuthentication):
-    def get_jwt_value(self, request):
-         return request.QUERY_PARAMS.get('jwt')
-```
-It is recommended to use `BaseJSONWebTokenAuthentication`, a new base class with no logic around parsing the HTTP headers.
 
 [jwt-auth-spec]: http://tools.ietf.org/html/draft-ietf-oauth-json-web-token
 [drf]: http://django-rest-framework.org/
