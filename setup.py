@@ -18,7 +18,7 @@ author = 'Jose Padilla'
 author_email = 'jpadilla@getblimp.com'
 license = 'MIT'
 install_requires = [
-    'PyJWT>=1.1.0,<2.0.0',
+    'PyJWT>=1.3.0,<2.0.0',
 ]
 
 
@@ -87,7 +87,6 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Topic :: Internet :: WWW/HTTP',
