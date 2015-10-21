@@ -1,6 +1,6 @@
 <div class="badges">
     <a href="https://travis-ci.org/GetBlimp/django-rest-framework-jwt">
-        <img src="https://travis-ci.org/GetBlimp/django-rest-framework-jwt.svg?branch=master">
+        <img src="https://travis-ci.org/GetBlimp/django-rest-framework-jwt.png?branch=master">
     </a>
     <a href="https://pypi.python.org/pypi/djangorestframework-jwt">
         <img src="https://img.shields.io/pypi/v/djangorestframework-jwt.svg">
@@ -30,16 +30,6 @@ If you want to know more about JWT, check out the following resources:
 - Python (2.7, 3.3, 3.4)
 - Django (1.6, 1.7)
 - Django REST Framework (2.4, 3.0, 3.1, 3.2)
-
-## Security
-
-Unlike some more typical uses of JWTs, this module only generates
-authentication tokens that will verify the user who is requesting one of your DRF
-protected API resources. The actual
-request parameters themselves are *not* included in the JWT claims which means
-they are not signed and may be tampered with. You should only expose your API
-endpoints over SSL/TLS to protect against content tampering and certain kinds of
-replay attacks.
 
 ## Installation
 
@@ -182,8 +172,7 @@ Default is `True`.
 
 ### JWT_VERIFY_EXPIRATION
 
-You can turn off expiration time verification by setting `JWT_VERIFY_EXPIRATION` to `False`.
-Without expiration verification, JWTs will last forever meaning a leaked token could be used by an attacker indefinitely.
+You can turn off expiration time verification with by setting `JWT_VERIFY_EXPIRATION` to `False`.
 
 Default is `True`.
 
@@ -259,20 +248,6 @@ class JSONWebTokenAuthenticationQS(BaseJSONWebTokenAuthentication):
          return request.QUERY_PARAMS.get('jwt')
 ```
 It is recommended to use `BaseJSONWebTokenAuthentication`, a new base class with no logic around parsing the HTTP headers.
-
-## Creating a new token manually ##
-
-Sometimes you may want to manually generate a token, for example to return a token to the user immediately after account creation. You can do this as follows:
-
-```python
-from rest_framework_jwt.settings import api_settings
-
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-
-payload = jwt_payload_handler(user)
-token = jwt_encode_handler(payload)
-```
 
 [jwt-auth-spec]: http://tools.ietf.org/html/draft-ietf-oauth-json-web-token
 [drf]: http://django-rest-framework.org/
