@@ -1,6 +1,6 @@
 <div class="badges">
     <a href="https://travis-ci.org/GetBlimp/django-rest-framework-jwt">
-        <img src="https://travis-ci.org/GetBlimp/django-rest-framework-jwt.png?branch=master">
+        <img src="https://travis-ci.org/GetBlimp/django-rest-framework-jwt.svg?branch=master">
     </a>
     <a href="https://pypi.python.org/pypi/djangorestframework-jwt">
         <img src="https://img.shields.io/pypi/v/djangorestframework-jwt.svg">
@@ -248,6 +248,20 @@ class JSONWebTokenAuthenticationQS(BaseJSONWebTokenAuthentication):
          return request.QUERY_PARAMS.get('jwt')
 ```
 It is recommended to use `BaseJSONWebTokenAuthentication`, a new base class with no logic around parsing the HTTP headers.
+
+## Creating a new token manually ##
+
+Sometimes you may want to manually generate a token, for example to return a token to the user immediately after account creation. You can do this as follows:
+
+```python
+from rest_framework_jwt.settings import api_settings
+
+jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+payload = jwt_payload_handler(user)
+token = jwt_encode_handler(payload)
+```
 
 [jwt-auth-spec]: http://tools.ietf.org/html/draft-ietf-oauth-json-web-token
 [drf]: http://django-rest-framework.org/
