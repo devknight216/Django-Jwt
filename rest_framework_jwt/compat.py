@@ -18,13 +18,9 @@ else:
             return self.validated_data
 
     class PasswordField(serializers.CharField):
-
-        def __init__(self, *args, **kwargs):
-            if 'style' not in kwargs:
-                kwargs['style'] = {'input_type': 'password'}
-            else:
-                kwargs['style']['input_type'] = 'password'
-            super(PasswordField, self).__init__(*args, **kwargs)
+        style = {
+            'input_type': 'password'
+        }
 
 
 def get_user_model():
@@ -57,9 +53,10 @@ def get_username(user):
 
 
 def get_request_data(request):
-    if hasattr(request, 'data'):
+    if getattr(request, 'data', None):
         data = request.data
     else:
         # DRF < 3.2
         data = request.DATA
+
     return data
